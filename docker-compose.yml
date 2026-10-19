@@ -272,7 +272,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "7687:7687"
     restart: unless-stopped
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -462,6 +461,7 @@ services:
     volumes:
       - langfuse_clickhouse_data:/var/lib/clickhouse
       - langfuse_clickhouse_logs:/var/log/clickhouse-server
+      - ./clickhouse/config.d/system_log_ttl.xml:/etc/clickhouse-server/config.d/system_log_ttl.xml:ro
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
       interval: 5s
@@ -541,7 +541,7 @@ services:
       SEARXNG_BASE_URL: https://${SEARXNG_HOSTNAME:-localhost}/
       UWSGI_WORKERS: ${SEARXNG_UWSGI_WORKERS:-4}
       UWSGI_THREADS: ${SEARXNG_UWSGI_THREADS:-4}
-    # cap_drop: - ALL  # Temporarily commented out for first run
+    # # cap_drop: - ALL  # Temporarily commented out for first run  # Temporarily commented out for first run
     cap_add:
       - CHOWN
       - SETGID
@@ -599,6 +599,12 @@ services:
     container_name: prometheus
     profiles: ["monitoring"]
     restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -626,6 +632,11 @@ services:
     container_name: cadvisor
     profiles: ["monitoring"]
     restart: unless-stopped
+    command:
+      - --housekeeping_interval=30s
+      - --docker_only=true
+      - --store_container_labels=false
+      - --disable_metrics=percpu,sched,tcp,udp,disk,diskIO,hugetlb,referenced_memory,cpu_topology,resctrl,advtcp,process,memory_numa
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -675,7 +686,7 @@ services:
     environment:
       DISABLE_GOOGLE_CHROME: false
     healthcheck:
-      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:3000/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:3000/health', timeout=5).status==200 else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -861,7 +872,7 @@ services:
     profiles: ["python-runner"]
     restart: unless-stopped
     working_dir: /app
-    command: /bin/sh -c 'if [ -f /app/requirements.txt ]; then python -m pip install --no-cache-dir -r /app/requirements.txt; fi; python /app/main.py'
+    command: /bin/sh -c 'if [ -f /app/requirements.txt ] && [ -s /app/requirements.txt ]; then python -m pip install --no-cache-dir -r /app/requirements.txt; fi; if [ -f /app/main.py ]; then python /app/main.py || true; fi; exec tail -f /dev/null'
     volumes:
       - ./python-runner:/app
 
@@ -1128,7 +1139,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= wget -qO- http://localhost:9621/health > /dev/null 2>&1 || exit 1",
+          "http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:9621/health', timeout=5).status==200 else 1)\" || exit 1",
         ]
       interval: 30s
       timeout: 10s

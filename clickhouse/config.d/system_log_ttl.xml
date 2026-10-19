@@ -1,0 +1,32 @@
+<clickhouse>
+    <!-- opentelemetry_span_log не включён: в базовом config.xml у него задан <engine>, а ClickHouse 26+ запрещает ttl рядом с engine -->
+    <!-- TTL 7 дней для всех системных логов — предотвращает неограниченный рост диска -->
+    <trace_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </trace_log>
+    <text_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </text_log>
+    <metric_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+        <flush_interval_milliseconds>15000</flush_interval_milliseconds>
+    </metric_log>
+    <asynchronous_metric_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+        <flush_interval_milliseconds>60000</flush_interval_milliseconds>
+    </asynchronous_metric_log>
+    <part_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </part_log>
+    <background_schedule_pool_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </background_schedule_pool_log>
+    <query_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </query_log>
+</clickhouse>
