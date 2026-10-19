@@ -1,0 +1,18 @@
+# Override for the upstream Supabase compose file (supabase/docker/docker-compose.yml).
+# Upstream publishes Kong, Supavisor and Logflare on 0.0.0.0, bypassing Caddy.
+# Bind them to localhost only; external HTTPS access goes through Caddy -> kong:8000.
+# For direct Postgres access use an SSH tunnel: ssh -L 5432:127.0.0.1:5432 user@server
+services:
+  kong:
+    ports: !override
+      - 127.0.0.1:${KONG_HTTP_PORT}:8000/tcp
+      - 127.0.0.1:${KONG_HTTPS_PORT}:8443/tcp
+
+  supavisor:
+    ports: !override
+      - 127.0.0.1:${POSTGRES_PORT}:5432
+      - 127.0.0.1:${POOLER_PROXY_PORT_TRANSACTION}:6543
+
+  analytics:
+    ports: !override
+      - 127.0.0.1:4000:4000

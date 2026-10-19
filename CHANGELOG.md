@@ -7,6 +7,9 @@ All notable changes to this project are documented in this file.
 ### Added
 - **Multica** - Open-source workspace for humans and AI coding agents (uses shared Postgres and Valkey)
 
+### Security
+- **Supabase** - Published ports (Kong 8000/8443, Supavisor 5432/6543, Logflare 4000) are now bound to `127.0.0.1` via `docker-compose.supabase.yml` override; external access only through Caddy
+
 ## [December 2025]
 
 ### Added

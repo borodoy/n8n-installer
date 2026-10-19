@@ -204,9 +204,12 @@ def start_supabase():
         print("Supabase is not enabled, skipping start.")
         return
     print("Starting Supabase services...")
-    run_command([
-        "docker", "compose", "-p", "localai", "-f", "supabase/docker/docker-compose.yml", "up", "-d"
-    ])
+    cmd = ["docker", "compose", "-p", "localai", "-f", "supabase/docker/docker-compose.yml"]
+    # Bind Supabase published ports to localhost (see docker-compose.supabase.yml)
+    if os.path.exists("docker-compose.supabase.yml"):
+        cmd.extend(["-f", "docker-compose.supabase.yml"])
+    cmd.extend(["up", "-d"])
+    run_command(cmd)
 
 def start_dify():
     """Start the Dify services (using its compose file)."""
