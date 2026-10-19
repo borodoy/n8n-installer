@@ -50,6 +50,8 @@ The installer also makes the following powerful open-source tools **available fo
 
 ✅ [**LibreTranslate**](https://docs.libretranslate.com/) - Self-hosted translation API (50+ languages).
 
+✅ [**Multica**](https://github.com/multica-ai/multica) - An open-source workspace where humans and AI coding agents (Claude Code, Codex, Cursor, etc.) work as one team: assign issues to agents, track their progress, and review their work.
+
 ✅ [**Neo4j**](https://neo4j.com/) - A graph database management system that allows you to model, store, and query data as a network of nodes and relationships.
 
 ✅ [**Ollama**](https://ollama.com/) - Run Llama 3, Mistral, Gemma, and other large language models locally.
@@ -153,6 +155,7 @@ After successful installation, your services are up and running! Here's how to g
     - **LightRAG:** `lightrag.yourdomain.com`
     - **Letta:** `letta.yourdomain.com`
     - **LibreTranslate:** `translate.yourdomain.com`
+    - **Multica:** `multica.yourdomain.com` (Sign in with an email code; without SMTP the code is printed to `multica-backend` logs)
     - **Neo4j:** `neo4j.yourdomain.com`
     - **Open WebUI:** `webui.yourdomain.com`
     - **PaddleOCR:** `paddleocr.yourdomain.com`

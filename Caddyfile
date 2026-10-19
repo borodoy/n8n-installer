@@ -43,6 +43,27 @@
     reverse_proxy postgresus:4005
 }
 
+# Multica (AI agents workspace) - single-origin layout
+{$MULTICA_HOSTNAME} {
+    # Private instance: keep it out of search engines
+    header X-Robots-Tag "noindex, nofollow, noarchive"
+    handle /robots.txt {
+        respond `User-agent: *
+Disallow: /` 200
+    }
+
+    # WebSocket goes straight to the backend (Next.js rewrites don't proxy upgrades)
+    @multica_ws path /ws /ws/*
+    handle @multica_ws {
+        reverse_proxy multica-backend:8080 {
+            flush_interval -1
+        }
+    }
+
+    # Everything else -> frontend (it proxies /api, /auth, /uploads, /v1 to the backend)
+    reverse_proxy multica-frontend:3000
+}
+
 # Welcome Page (Post-install dashboard)
 {$WELCOME_HOSTNAME} {
     basic_auth {

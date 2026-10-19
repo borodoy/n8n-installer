@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## [October 2026]
+
+### Added
+- **Multica** - Open-source workspace for humans and AI coding agents (uses shared Postgres and Valkey)
+
 ## [December 2025]
 
 ### Added

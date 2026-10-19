@@ -129,6 +129,12 @@ if is_profile_active "searxng"; then
     check_image_update "searxng" "searxng/searxng:latest"
 fi
 
+if is_profile_active "multica"; then
+    log_subheader "Multica"
+    check_image_update "multica-backend" "ghcr.io/multica-ai/multica-backend:${MULTICA_IMAGE_TAG:-latest}"
+    check_image_update "multica-frontend" "ghcr.io/multica-ai/multica-web:${MULTICA_IMAGE_TAG:-latest}"
+fi
+
 if is_profile_active "postgresus"; then
     log_subheader "Postgresus"
     check_image_update "postgresus" "ghcr.io/postgresus/postgresus:latest"

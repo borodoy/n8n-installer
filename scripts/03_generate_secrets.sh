@@ -91,6 +91,7 @@ declare -A VARS_TO_GENERATE=(
     ["LOGFLARE_PUBLIC_ACCESS_TOKEN"]="fixed:not-in-use" # For supabase-vector, can't be empty
     ["LT_PASSWORD"]="password:32" # Added LibreTranslate basic auth password
     ["MINIO_ROOT_PASSWORD"]="password:32"
+    ["MULTICA_JWT_SECRET"]="hex:64" # Multica auth JWT signing key (32 bytes -> 64 hex chars)
     ["N8N_ENCRYPTION_KEY"]="secret:64" # base64 encoded, 48 bytes -> 64 chars
     ["N8N_RUNNERS_AUTH_TOKEN"]="secret:64" # Task runner auth token for n8n v2.0
     ["N8N_USER_MANAGEMENT_JWT_SECRET"]="secret:64" # base64 encoded, 48 bytes -> 64 chars

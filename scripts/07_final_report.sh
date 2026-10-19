@@ -91,6 +91,9 @@ fi
 if is_profile_active "open-webui"; then
     echo -e "     ${GREEN}*${NC} ${WHITE}Open WebUI${NC}: Register your account"
 fi
+if is_profile_active "multica"; then
+    echo -e "     ${GREEN}*${NC} ${WHITE}Multica${NC}: Sign in by email code (without SMTP the code is in ${CYAN}make logs s=multica-backend${NC})"
+fi
 if is_profile_active "gost"; then
     echo -e "     ${GREEN}*${NC} ${WHITE}Gost Proxy${NC}: Routing AI traffic through external proxy"
 fi

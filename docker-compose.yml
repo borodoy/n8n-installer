@@ -12,6 +12,7 @@ volumes:
   letta_data:
   libretranslate_api_keys:
   libretranslate_models:
+  multica_uploads:
   lightrag_data:
   lightrag_inputs:
   n8n_storage:
@@ -296,6 +297,7 @@ services:
       LT_HOSTNAME: ${LT_HOSTNAME}
       LT_PASSWORD_HASH: ${LT_PASSWORD_HASH}
       LT_USERNAME: ${LT_USERNAME}
+      MULTICA_HOSTNAME: ${MULTICA_HOSTNAME}
       N8N_HOSTNAME: ${N8N_HOSTNAME}
       NEO4J_HOSTNAME: ${NEO4J_HOSTNAME}
       PADDLEOCR_HOSTNAME: ${PADDLEOCR_HOSTNAME}
@@ -1170,3 +1172,105 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
+  # Multica - one-shot job that creates the "multica" database in the shared Postgres
+  multica-db-init:
+    image: postgres:${POSTGRES_VERSION:-17}
+    container_name: multica-db-init
+    profiles: ["multica"]
+    restart: "no"
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        psql -tAc "SELECT 1 FROM pg_database WHERE datname = 'multica'" | grep -q 1 \
+          || psql -c "CREATE DATABASE multica"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  multica-backend:
+    image: ghcr.io/multica-ai/multica-backend:${MULTICA_IMAGE_TAG:-latest}
+    container_name: multica-backend
+    profiles: ["multica"]
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    environment:
+      <<: *proxy-env
+      APP_ENV: production
+      PORT: "8080"
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/multica?sslmode=disable
+      # Shared Valkey, dedicated logical DB to keep keys separate from n8n
+      REDIS_URL: redis://redis:6379/5
+      JWT_SECRET: ${MULTICA_JWT_SECRET}
+      # Single-origin layout: frontend, /api and /ws are all served from MULTICA_HOSTNAME
+      FRONTEND_ORIGIN: ${MULTICA_HOSTNAME:+https://}${MULTICA_HOSTNAME}
+      CORS_ALLOWED_ORIGINS: ${MULTICA_HOSTNAME:+https://}${MULTICA_HOSTNAME}
+      MULTICA_APP_URL: ${MULTICA_HOSTNAME:+https://}${MULTICA_HOSTNAME}
+      MULTICA_PUBLIC_URL: ${MULTICA_HOSTNAME:+https://}${MULTICA_HOSTNAME}
+      MULTICA_TRUSTED_PROXIES: 172.16.0.0/12
+      # Auth rate limiter: trust X-Forwarded-For from Caddy/frontend so limits are per real client IP
+      RATE_LIMIT_TRUSTED_PROXIES: 172.16.0.0/12
+      GOOGLE_CLIENT_ID: ${MULTICA_GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${MULTICA_GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${MULTICA_HOSTNAME:+https://}${MULTICA_HOSTNAME}/auth/callback
+      # Email for login codes. When SMTP is not configured, codes are printed to the
+      # container logs: docker compose -p localai logs multica-backend | grep "Verification code"
+      SMTP_HOST: ${MULTICA_SMTP_HOST:-}
+      SMTP_PORT: ${MULTICA_SMTP_PORT:-587}
+      SMTP_USERNAME: ${MULTICA_SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${MULTICA_SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${MULTICA_SMTP_FROM_EMAIL:-}
+      SMTP_TLS: ${MULTICA_SMTP_TLS:-}
+      ALLOW_SIGNUP: ${MULTICA_ALLOW_SIGNUP:-true}
+      ALLOWED_EMAILS: ${MULTICA_ALLOWED_EMAILS:-}
+      ALLOWED_EMAIL_DOMAINS: ${MULTICA_ALLOWED_EMAIL_DOMAINS:-}
+      DISABLE_WORKSPACE_CREATION: ${MULTICA_DISABLE_WORKSPACE_CREATION:-}
+      DO_NOT_TRACK: ${MULTICA_DO_NOT_TRACK:-}
+      MULTICA_VCS_INTEGRATION_ENABLED: "true"
+    volumes:
+      - multica_uploads:/app/data/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= wget -qO- http://127.0.0.1:8080/health > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      multica-db-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  multica-frontend:
+    image: ghcr.io/multica-ai/multica-web:${MULTICA_IMAGE_TAG:-latest}
+    container_name: multica-frontend
+    profiles: ["multica"]
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    environment:
+      HOSTNAME: "0.0.0.0"
+      # Next.js rewrites proxy /api, /auth, /uploads and /v1 to the backend
+      REMOTE_API_URL: http://multica-backend:8080
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000 > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      multica-backend:
+        condition: service_healthy

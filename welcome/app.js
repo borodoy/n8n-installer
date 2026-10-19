@@ -319,6 +319,14 @@
             category: 'tools',
             docsUrl: 'https://www.paddleocr.ai/latest/en/index.html'
         },
+        'multica': {
+            name: 'Multica',
+            description: 'Workspace for Humans + AI Agents',
+            icon: 'MC',
+            color: 'bg-[#4F46E5]',
+            category: 'ai',
+            docsUrl: 'https://github.com/multica-ai/multica'
+        },
         'postiz': {
             name: 'Postiz',
             description: 'Social Publishing Platform',

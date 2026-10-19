@@ -51,6 +51,7 @@ base_services_data=(
     "lightrag" "LightRAG (Graph-based RAG with knowledge graphs)"
     "libretranslate" "LibreTranslate (Self-hosted translation API - 50+ languages)"
     "monitoring" "Monitoring Suite (Prometheus, Grafana, cAdvisor, Node-Exporter)"
+    "multica" "Multica (Workspace for humans + AI coding agents)"
     "n8n" "n8n, n8n-worker, n8n-import (Workflow Automation)"
     "neo4j" "Neo4j (Graph Database)"
     "ollama" "Ollama (Local LLM Runner - select hardware in next step)"

@@ -312,6 +312,20 @@ if is_profile_active "postiz"; then
     }")
 fi
 
+# Multica
+if is_profile_active "multica"; then
+    SERVICES_ARRAY+=("    \"multica\": {
+      \"hostname\": \"$(json_escape "$MULTICA_HOSTNAME")\",
+      \"credentials\": {
+        \"note\": \"Sign in with email code (printed to multica-backend logs if SMTP is not set)\"
+      },
+      \"extra\": {
+        \"internal_api\": \"http://multica-backend:8080\",
+        \"docs\": \"https://github.com/multica-ai/multica/blob/main/SELF_HOSTING.md\"
+      }
+    }")
+fi
+
 # WAHA
 if is_profile_active "waha"; then
     SERVICES_ARRAY+=("    \"waha\": {
@@ -486,6 +500,16 @@ if is_profile_active "postgresus"; then
       \"step\": $STEP_NUM,
       \"title\": \"Configure database backups\",
       \"description\": \"Set up Postgresus for automated PostgreSQL backups\"
+    }")
+    ((STEP_NUM++))
+fi
+
+# Connect agent daemon to Multica (if multica active)
+if is_profile_active "multica"; then
+    QUICK_START_ARRAY+=("    {
+      \"step\": $STEP_NUM,
+      \"title\": \"Connect your AI agents to Multica\",
+      \"description\": \"On your dev machine run: multica setup self-host --server-url https://$(json_escape "$MULTICA_HOSTNAME") --app-url https://$(json_escape "$MULTICA_HOSTNAME")\"
     }")
     ((STEP_NUM++))
 fi
