@@ -8,7 +8,8 @@
 #   3. Configures services (05_configure_services.sh)
 #   4. Pulls latest Docker images for selected services
 #   5. Restarts all services (06_run_services.sh)
-#   6. Displays final report (07_final_report.sh)
+#   6. Drops stale ClickHouse system log tables (clickhouse_cleanup_logs.sh)
+#   7. Displays final report (07_final_report.sh)
 #
 # Handles multiple compose files: main, n8n-workers, Supabase, and Dify.
 #
@@ -97,6 +98,12 @@ log_info "Running Services..."
 bash "$RUN_SERVICES_SCRIPT" || { log_error "Failed to start services. Check logs for details."; exit 1; }
 
 log_success "Update application completed successfully!"
+
+# --- Clean up stale ClickHouse system log tables ---
+bash "$SCRIPT_DIR/clickhouse_cleanup_logs.sh" || {
+    log_warning "Failed to clean up ClickHouse system logs. This does not affect the update."
+}
+# --- End of ClickHouse cleanup ---
 
 # --- Fix file permissions ---
 log_info "Fixing file permissions..."

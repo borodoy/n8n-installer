@@ -10,6 +10,9 @@ All notable changes to this project are documented in this file.
 ### Security
 - **Supabase** - Published ports (Kong 8000/8443, Supavisor 5432/6543, Logflare 4000) are now bound to `127.0.0.1` via `docker-compose.supabase.yml` override; external access only through Caddy
 
+### Fixed
+- **ClickHouse** - High CPU/disk usage from system logs: `trace_log`, `opentelemetry_span_log` and `query_metric_log` disabled, server and `text_log` level lowered to `warning`, file log capped at 3 × 100 MB, 7-day TTL for all remaining system logs. New `scripts/clickhouse_cleanup_logs.sh` (run on every update) drops stale `*_log_N` tables left after ClickHouse upgrades
+
 ## [December 2025]
 
 ### Added

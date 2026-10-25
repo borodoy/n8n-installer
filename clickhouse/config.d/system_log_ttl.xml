@@ -1,11 +1,26 @@
 <clickhouse>
-    <!-- opentelemetry_span_log не включён: в базовом config.xml у него задан <engine>, а ClickHouse 26+ запрещает ttl рядом с engine -->
-    <!-- TTL 7 дней для всех системных логов — предотвращает неограниченный рост диска -->
-    <trace_log>
-        <ttl>event_date + INTERVAL 7 DAY</ttl>
-        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
-    </trace_log>
+    <!-- Системные логи ClickHouse: ограничение роста диска и нагрузки на CPU.
+         Таблицы старых схем (*_N), остающиеся после обновления образа, удаляет scripts/clickhouse_cleanup_logs.sh -->
+
+    <!-- Файловый лог сервера: только warning и выше, не больше 3 × 100 MB
+         (по умолчанию trace и 10 × 1 GB — гигабайты записи на диск) -->
+    <logger>
+        <level>warning</level>
+        <size>100M</size>
+        <count>3</count>
+    </logger>
+
+    <!-- trace_log отключён: real-time профилировщик писал ~3 млн строк в день и грузил CPU.
+         Без trace_log профилировщик запросов не запускается. -->
+    <trace_log remove="1"/>
+    <!-- Не нужны Langfuse и не имеют TTL по умолчанию (а opentelemetry_span_log задаёт <engine>,
+         рядом с которым ClickHouse 26+ запрещает ttl) — отключены -->
+    <opentelemetry_span_log remove="1"/>
+    <query_metric_log remove="1"/>
+
+    <!-- TTL 7 дней для остальных системных логов -->
     <text_log>
+        <level>warning</level>
         <ttl>event_date + INTERVAL 7 DAY</ttl>
         <flush_interval_milliseconds>7500</flush_interval_milliseconds>
     </text_log>
@@ -29,4 +44,10 @@
         <ttl>event_date + INTERVAL 7 DAY</ttl>
         <flush_interval_milliseconds>7500</flush_interval_milliseconds>
     </query_log>
+    <error_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+    </error_log>
+    <processors_profile_log>
+        <ttl>event_date + INTERVAL 7 DAY</ttl>
+    </processors_profile_log>
 </clickhouse>
